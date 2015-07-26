@@ -1,24 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Automation;
 using System.Runtime.InteropServices;
-using System.Runtime.ExceptionServices;
 using System.IO;
-using System.Xml.Serialization;
 using System.Collections.Specialized;
+using NHotkey.Wpf;
+using NHotkey;
+using System.Collections.Generic;
+using System.Windows.Media;
+using HtmlAgilityPack;
 
 namespace Google_Translate
 {
@@ -28,236 +21,374 @@ namespace Google_Translate
     public partial class MainWindow : Window
     {
 
-        private string path = Path.GetTempPath() + "GoogleTranslate";
-        private string xmlText;
         private DataType _typeFlag;
         enum DataType
         {
             Image, Audio, Text, FileToDrop, Other
         };
 
+        BrushConverter conventer = new BrushConverter();
+
+        Brush clicked, notClicked;
+
+        Dictionary<string, string> languages = new Dictionary<string, string>()
+        {
+            { "Polish", "pl" },
+            { "English", "en" }
+        };
+
+        string inputLang;
+        string resultLang;
+
+        private List<bool> _successArray = new List<bool>();
+
         public MainWindow()
         {
             InitializeComponent();
+            this.ShowInTaskbar = false;
+        }
+        private void OnShowUp(object sender, HotkeyEventArgs e)
+        {
+            _successArray.Clear();
+
+            if (!Topmost)
+            {
+                this.Topmost = true;
+                this.Topmost = false;
+            }
+
+            try
+            {
+                object temp = null;
+
+                if (Clipboard.ContainsImage())
+                {
+                    temp = Clipboard.GetImage();
+                    _typeFlag = DataType.Image;
+                }
+                else if (Clipboard.ContainsAudio())
+                {
+                    temp = Clipboard.GetAudioStream();
+                    _typeFlag = DataType.Audio;
+                }
+                else if (Clipboard.ContainsText())
+                {
+                    temp = Clipboard.GetText();
+                    _typeFlag = DataType.Text;
+                }
+                else if (Clipboard.ContainsFileDropList())
+                {
+                    temp = Clipboard.GetFileDropList();
+                    _typeFlag = DataType.FileToDrop;
+                }
+                else
+                {
+                    _typeFlag = DataType.Other;
+                }
+
+                Clear(10, 10, _successArray);
+
+                if (SendWait("^c", 50, 10, _successArray))
+                {
+                    Input.Text = GetText(10, 10, _successArray);
+                }
+
+                Clear(10, 10, _successArray);
+
+                switch (_typeFlag)
+                {
+                    case DataType.Audio:
+                        Clipboard.SetAudio(temp as Stream);
+                        break;
+                    case DataType.Image:
+                        Clipboard.SetImage(temp as BitmapSource);
+                        break;
+                    case DataType.FileToDrop:
+                        Clipboard.SetFileDropList(temp as StringCollection);
+                        break;
+                    case DataType.Text:
+                        SetText(temp as string, 10, 10, _successArray);
+                        break;
+                    case DataType.Other:
+
+                        break;
+                }
+
+                if (_successArray.Contains(false))
+                {
+                    Result.Text = "/błąd/";
+                    return;
+                }
+
+                Translate();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Upss! Błąd! Spróbuj jeszcze raz :)");
+            }
+
         }
 
-        private void Send_Click(object sender, RoutedEventArgs e)
+
+        private void SetText(string text, int tries, int timespan, List<bool> success)
         {
-            string url = String.Format("http://www.google.com/translate_t?hl=en&ie=UTF8&text={0}&langpair={1}", Input.Text, "en|pl");
+            for (int i = 0; i < tries; i++)
+            {
+                try
+                {
+                    Thread.Sleep(timespan);
+                    Clipboard.SetText(text);
+                    success.Add(true);
+                    return;
+                }
+                catch (COMException ex)
+                {
+                    Console.WriteLine("SetText. Try numb: {0}", i);
+                    if (i == tries - 1)
+                    {
+                        success.Add(false);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private string GetText(int tries, int timespan, List<bool> success)
+        {
+            for (int i = 0; i < tries; i++)
+            {
+                try
+                {
+                    Thread.Sleep(timespan);
+                    var temp = Clipboard.GetText();
+                    Console.WriteLine("GetText: {0}", temp);
+                    success.Add(true);
+                    return temp;
+                }
+                catch (COMException ex)
+                {
+                    Console.WriteLine("GetText. Try numb: {0}", i);
+                    if (i == tries - 1)
+                    {
+                        success.Add(false);
+                        return String.Empty;
+                    }
+                }
+            }
+            return String.Empty;
+        }
+
+        private bool ContainsText(int tries, int timespan, List<bool> success)
+        {
+            for (int i = 0; i < tries; i++)
+            {
+                try
+                {
+                    Thread.Sleep(timespan);
+                    var temp = Clipboard.ContainsText();
+                    if (!temp) continue;
+                    success.Add(true);
+                    Console.WriteLine(temp);
+                    return temp;
+                }
+                catch (COMException ex)
+                {
+                    Console.WriteLine("ContainsText. Try numb: {0}", i);
+                    if (i == tries - 1)
+                    {
+                        success.Add(false);
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void Clear(int tries, int timespan, List<bool> success)
+        {
+            for (int i = 0; i < tries; i++)
+            {
+                try
+                {
+                    Thread.Sleep(timespan);
+                    Clipboard.Clear();
+                    success.Add(true);
+                    return;
+                }
+                catch (COMException ex)
+                {
+                    Console.WriteLine("Clear. Try numb: {0}", i);
+                    if (i == tries - 1)
+                    {
+                        success.Add(false);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private bool SendWait(string keys, int tries, int timespan, List<bool> success)
+        {
+            for (int i = 0; i < tries; i++)
+            {
+                System.Windows.Forms.SendKeys.SendWait("^c");
+                Thread.Sleep(timespan);
+                var go = ContainsText(10, 10, success);
+                if (go)
+                {
+                    return go;
+                }
+            }
+            return false;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            RefreshWindow();
+            try
+            {
+                HotkeyManager.Current.AddOrReplace("Text", Key.F2, ModifierKeys.None, OnShowUp);
+            }
+            catch (HotkeyAlreadyRegisteredException ex)
+            {
+                this.Close();
+            }
+            this.SizeToContent = SizeToContent.Height;
+
+            inputLang = languages["English"];
+            resultLang = languages["Polish"];
+
+            myNotifyIcon.TrayLeftMouseDown += MyNotifyIcon_TrayLeftMouseDown;
+
+            Input.SizeChanged += Input_SizeChanged;
+            clicked = (Brush)conventer.ConvertFromString("#C0C0C0");
+            notClicked = (Brush)conventer.ConvertFromString("#E3E3E3");
+
+
+        }
+
+        private void RefreshWindow()
+        {
+            var desktopWorkingArea = SystemParameters.WorkArea;
+            this.Left = desktopWorkingArea.Right - this.ActualWidth;
+            this.Top = desktopWorkingArea.Bottom - this.ActualHeight;
+        }
+
+        private void Input_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            RefreshWindow();
+        }
+
+        private bool _isHiding;
+        private void MyNotifyIcon_TrayLeftMouseDown(object sender, RoutedEventArgs e)
+        {
+
+            if (!Topmost)
+            {
+                this.Show();
+                this.Topmost = true;
+                this.Topmost = false;
+            }
+
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            HotkeyManager.Current.Remove("Text");
+            myNotifyIcon.Dispose();
+        }
+
+        private void Translate()
+        {
+            if (String.IsNullOrEmpty(Input.Text))
+            {
+                return;
+            }
+
+            Result.Text = String.Empty;
+
+            string url = String.Format("http://www.google.com/translate_t?hl=en&ie=UTF8&text={0}&langpair={1}", Input.Text, 
+                String.Format("{0}|{1}", inputLang, resultLang));
             WebClient webClient = new WebClient();
             webClient.Encoding = System.Text.Encoding.UTF8;
             webClient.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0");
             webClient.Headers.Add(HttpRequestHeader.AcceptCharset, "UTF-8");
             string result = webClient.DownloadString(url);
-            result = result.Substring(result.IndexOf("<span title=\"") + "<span title=\"".Length);
-            result = result.Substring(result.IndexOf(">") + 1);
-            result = result.Substring(0, result.IndexOf("</span>"));
-            Result.Content = result.Trim();
 
-            Thread.Sleep(4000);
-           
-            object temp = null;
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(result);
 
-            if (Clipboard.ContainsImage())
+            foreach (HtmlNode span in doc.DocumentNode.SelectNodes("//span[@title]"))
             {
-                temp = Clipboard.GetImage();
-                _typeFlag = DataType.Image;
+                Result.Text += span.InnerText + " ";
             }
-            else if (Clipboard.ContainsAudio())
+
+        }
+
+        private void Send_Click(object sender, RoutedEventArgs e)
+        {
+            Translate();
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void BtnPin_Click(object sender, RoutedEventArgs e)
+        {
+            this.Topmost = !this.Topmost;
+            if (this.Topmost)
             {
-                temp = Clipboard.GetAudioStream();
-                _typeFlag = DataType.Audio;
-            }
-            else if (Clipboard.ContainsText())
-            {
-                temp = Clipboard.GetText();
-                _typeFlag = DataType.Text;
-            }
-            else if (Clipboard.ContainsFileDropList())
-            {
-                temp = Clipboard.GetFileDropList();
-                _typeFlag = DataType.FileToDrop;
+                BtnPin.Background = clicked;
+                PinBorder.Background = clicked;
             }
             else
             {
-                _typeFlag = DataType.Other;
-            }
 
-            System.Windows.Forms.SendKeys.SendWait("^c");
-            if (System.Windows.Forms.Clipboard.ContainsText())
-            {
-                var selectedText = System.Windows.Forms.Clipboard.GetText();
-                Input.Text = selectedText;
-            }
-
-            Clipboard.Clear();
-
-            switch (_typeFlag)
-            {
-                case DataType.Audio:
-                    Clipboard.SetAudio(temp as Stream);
-                    break;
-                case DataType.Image:
-                    Clipboard.SetImage(temp as BitmapSource);
-                    break;
-                case DataType.FileToDrop:
-                    Clipboard.SetFileDropList(temp as StringCollection);
-                    break;
-                case DataType.Text:
-                    Clipboard.SetText(temp as string);
-                    break;
-                case DataType.Other:
-
-                    break;
+                BtnPin.Background = notClicked;
+                PinBorder.Background = notClicked;
             }
         }
 
-
-        //var element = AutomationElement.FocusedElement;
-
-        //if (element != null)
-        //{
-        //    object pattern;
-        //    if (element.TryGetCurrentPattern(TextPattern.Pattern, out pattern))
-        //    {
-        //        var tp = (TextPattern)pattern;
-        //        var sb = new StringBuilder();
-
-        //        foreach (var r in tp.GetSelection())
-        //        {
-        //            sb.AppendLine(r.GetText(-1));
-        //        }
-
-        //        var selectedText = sb.ToString();
-        //    }
-        //}
-
-
-        //SendKeys.SendWait("^c");
-        //if (System.Windows.Forms.Clipboard.ContainsText())
-        //{
-        //    var selectedText = System.Windows.Forms.Clipboard.GetText();
-        //}
-
-        //Thread thread = new Thread(() =>
-        //{
-
-        //});
-
-        //thread.Start();
-        //thread.Join(12000);
-
-        //GetTextFromControlAtMousePosition();
-        private string GetTextFromFocusedControl()
+        private void Input_KeyDown(object sender, KeyEventArgs e)
         {
-            try
+            if (e.Key == Key.Enter)
             {
-                int activeWinPtr = GetForegroundWindow().ToInt32();
-                int activeThreadId = 0, processId;
-                activeThreadId = GetWindowThreadProcessId(activeWinPtr, out processId);
-                int currentThreadId = GetCurrentThreadId();
-
-                if (activeThreadId != currentThreadId)
-                {
-                    AttachThreadInput(activeThreadId, currentThreadId, true);
-                }
-
-                IntPtr activeCtrlId = GetFocus();
-
-                return GetText(activeCtrlId);
-            }
-            catch (Exception exp)
-            {
-                System.Windows.MessageBox.Show(exp.Message);
-                return exp.Message;
+                Translate();
             }
         }
 
-        //Get the text of the control at the mouse position
-        private string GetTextFromControlAtMousePosition()
+        private void PlToEn_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                Point p;
-                if (GetCursorPos(out p))
-                {
-                    IntPtr ptr = WindowFromPoint(p);
-                    if (ptr != IntPtr.Zero)
-                    {
-                        return GetText(ptr);
-                    }
-                }
-                return "";
-            }
-            catch (Exception exp)
-            {
-                return exp.Message;
-            }
+            inputLang = languages["Polish"];
+            resultLang = languages["English"];
+
+            PlToEn.Background = clicked;
+            PlToEnBorder.Background = clicked;
+
+            EnToPl.Background = notClicked;
+            EnToPlBorder.Background = notClicked;
         }
 
-        //Get the text of a control with its handle
-        private string GetText(IntPtr handle)
+        private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            int maxLength = 500;
-            IntPtr buffer = Marshal.AllocHGlobal((maxLength + 1) * 2);
-            SendMessageW(handle, WM_GETTEXT, maxLength, buffer);
-            string w = Marshal.PtrToStringUni(buffer);
-            Marshal.FreeHGlobal(buffer);
-            return w;
+            if (!Topmost)
+            {
+                this.Hide();
+            }
         }
 
-        [DllImport("user32.dll")]
-        public static extern bool GetCursorPos(out Point pt);
+        private void EnToPl_Click(object sender, RoutedEventArgs e)
+        {
+            inputLang = languages["English"];
+            resultLang = languages["Polish"];
 
-        [DllImport("user32.dll", EntryPoint = "WindowFromPoint", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern IntPtr WindowFromPoint(Point pt);
+            EnToPl.Background = clicked;
+            EnToPlBorder.Background = clicked;
 
-        [DllImport("user32.dll", EntryPoint = "SendMessageW")]
-        public static extern int SendMessageW([InAttribute] System.IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
-        public const int WM_GETTEXT = 13;
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        internal static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        internal static extern IntPtr GetFocus();
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern int GetWindowThreadProcessId(int handle, out int processId);
-
-        [DllImport("user32", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
-        internal static extern int AttachThreadInput(int idAttach, int idAttachTo, bool fAttach);
-        [DllImport("kernel32.dll")]
-        internal static extern int GetCurrentThreadId();
-
-        [DllImport("user32", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern int GetWindowText(IntPtr hWnd, [Out, MarshalAs(UnmanagedType.LPTStr)] StringBuilder lpString, int nMaxCount);
-
-
-
-        //System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
-
-        //private void Window_Loaded(object sender, RoutedEventArgs e)
-        //{
-        //    dispatcherTimer.Tick += dispatcherTimer_Tick;
-        //    dispatcherTimer.Interval = new TimeSpan(0, 0, 5);
-        //    dispatcherTimer.Start();
-        //}
-
-
-        //private void dispatcherTimer_Tick(object sender, EventArgs e)
-        //{
-        //    try
-        //    {
-        //        TextSelectionReader text = new TextSelectionReader();
-        //        var aa = text.TryGetSelectedTextFromActiveControl();
-        //        System.Windows.MessageBox.Show(aa ?? "null");
-        //    }
-        //    catch (Exception exp)
-        //    {
-        //        System.Windows.MessageBox.Show(exp.Message);
-        //    }
-        //}
-
+            PlToEn.Background = notClicked;
+            PlToEnBorder.Background = notClicked;
+        }
     }
 }

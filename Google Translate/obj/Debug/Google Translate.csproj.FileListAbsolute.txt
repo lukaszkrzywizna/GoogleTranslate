@@ -11,3 +11,12 @@ d:\home\dokumenty\visual studio 2013\Projects\Google Translate\Google Translate\
 d:\home\dokumenty\visual studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.csproj.GenerateResource.Cache
 d:\home\dokumenty\visual studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.exe
 d:\home\dokumenty\visual studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.pdb
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate_MarkupCompile.lref
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\NHotkey.dll
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\NHotkey.Wpf.dll
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Hardcodet.Wpf.TaskbarNotification.dll
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Hardcodet.Wpf.TaskbarNotification.pdb
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Hardcodet.Wpf.TaskbarNotification.xml
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\HtmlAgilityPack.dll
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\HtmlAgilityPack.pdb
+D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\HtmlAgilityPack.xml
