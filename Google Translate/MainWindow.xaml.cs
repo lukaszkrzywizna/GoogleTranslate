@@ -10,8 +10,12 @@ using System.Collections.Specialized;
 using NHotkey.Wpf;
 using NHotkey;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media;
 using HtmlAgilityPack;
+using System.Xml.Serialization;
+using System.Xml;
+using System.Configuration;
 
 namespace Google_Translate
 {
@@ -20,39 +24,63 @@ namespace Google_Translate
     /// </summary>
     public partial class MainWindow : Window
     {
-
+        #region Fields
         private DataType _typeFlag;
-        enum DataType
+        private enum DataType
         {
             Image, Audio, Text, FileToDrop, Other
         };
 
-        BrushConverter conventer = new BrushConverter();
+        private BrushConverter _conventer = new BrushConverter();
 
-        Brush clicked, notClicked;
+        private Brush _clicked, _notClicked;
 
-        Dictionary<string, string> languages = new Dictionary<string, string>()
-        {
-            { "Polish", "pl" },
-            { "English", "en" }
-        };
-
-        string inputLang;
-        string resultLang;
+        private string _sourceLang;
+        private string _resultLang;
 
         private List<bool> _successArray = new List<bool>();
+
+        private Dictionary<string, string> languages = new Dictionary<string, string>()
+        {
+            { "Auto-detect", "auto" },
+            { "Polish", "pl" },
+            { "English", "en" },
+            { "German", "de" },
+            { "Spanish", "es" },
+            { "Czech", "cs" },
+            { "Slovak", "sk" },
+            { "Dutch", "nl" },
+            { "French", "fr" },
+            { "Irish", "ga" },
+            { "Italian", "it" },
+            { "Latin", "la" },
+            { "Macedonian", "mk" },
+            { "Portuguese", "pt" },
+            { "Russian", "ru" },
+            { "Ukrainian", "uk" },
+            { "Norwegian", "no" }
+
+        };
+        #endregion
 
         public MainWindow()
         {
             InitializeComponent();
             this.ShowInTaskbar = false;
         }
-        private void OnShowUp(object sender, HotkeyEventArgs e)
+
+        #region Translate and organise clipboard
+        /// <summary>
+        /// Method start whole translate proccess. Saves content of clipboard and copy selected text. 
+        /// Then execute Translate() method.
+        /// </summary>
+        private void StartAction()
         {
             _successArray.Clear();
 
             if (!Topmost)
             {
+                this.Show();
                 this.Topmost = true;
                 this.Topmost = false;
             }
@@ -129,6 +157,54 @@ namespace Google_Translate
 
         }
 
+        /// <summary>
+        /// Main translate method. It creates Webclient and takes result 
+        /// </summary>
+        private void Translate()
+        {
+            if (String.IsNullOrEmpty(Input.Text))
+            {
+                return;
+            }
+            if (_sourceLang == _resultLang)
+            {
+                SetSource.SelectedIndex = SetSource.Items.IndexOf("Auto-detect");
+            }
+
+            Result.Text = String.Empty;
+
+            string url = String.Format("http://www.google.com/translate_t?hl=en&ie=UTF8&text={0}&langpair={1}", Input.Text,
+                String.Format("{0}|{1}", _sourceLang, _resultLang));
+
+            WebClient webClient = new WebClient();
+            webClient.Encoding = System.Text.Encoding.UTF8;
+            webClient.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0");
+            webClient.Headers.Add(HttpRequestHeader.AcceptCharset, "UTF-8");
+            string result = String.Empty;
+            try
+            {
+                result = webClient.DownloadString(url);
+            }
+            catch (Exception ex)
+            {
+                Result.Text = ex.Message;
+                return;
+            }
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(result);
+
+            foreach (HtmlNode span in doc.DocumentNode.SelectNodes("//span[@title]"))
+            {
+                Result.Text += span.InnerText + " ";
+            }
+
+        }
+
+        #endregion
+
+
+        #region Clipboard Helper Methods
 
         private void SetText(string text, int tries, int timespan, List<bool> success)
         {
@@ -242,29 +318,59 @@ namespace Google_Translate
             return false;
         }
 
+        #endregion
+
+        #region Event Handlers
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             RefreshWindow();
-            try
-            {
-                HotkeyManager.Current.AddOrReplace("Text", Key.F2, ModifierKeys.None, OnShowUp);
-            }
-            catch (HotkeyAlreadyRegisteredException ex)
+
+            if (!HotKeyActioner.Initialize())
             {
                 this.Close();
             }
+            
+            HotKeyActioner.AssignActionMethod(StartAction);
+
             this.SizeToContent = SizeToContent.Height;
 
-            inputLang = languages["English"];
-            resultLang = languages["Polish"];
+            PrepareComboBoxes();
 
             myNotifyIcon.TrayLeftMouseDown += MyNotifyIcon_TrayLeftMouseDown;
 
             Input.SizeChanged += Input_SizeChanged;
-            clicked = (Brush)conventer.ConvertFromString("#C0C0C0");
-            notClicked = (Brush)conventer.ConvertFromString("#E3E3E3");
 
+            _clicked = (Brush)_conventer.ConvertFromString("#4B8DF8");
+            _notClicked = (Brush)_conventer.ConvertFromString("#E3E3E3");
+        }
 
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            HotKeyActioner.SaveAndUnregister(SetSource.SelectedItem.ToString(), GetResult.SelectedItem.ToString());
+            myNotifyIcon.Dispose();
+        }
+
+        private void PrepareComboBoxes()
+        {
+            string source = ConfigurationManager.AppSettings["Source"];
+            string result = ConfigurationManager.AppSettings["Result"];
+
+            _sourceLang = languages[source];
+            _resultLang = languages[result];
+
+            var list1 = languages.Keys.ToList();
+            list1.Sort();
+
+            var list2 = languages.Keys.ToList();
+            list2.Sort();
+            list2.Remove("Auto-detect");
+
+            SetSource.ItemsSource = list1;
+            GetResult.ItemsSource = list2;
+
+            SetSource.SelectedIndex = list1.IndexOf(source);
+            GetResult.SelectedIndex = list2.IndexOf(result);
         }
 
         private void RefreshWindow()
@@ -279,7 +385,7 @@ namespace Google_Translate
             RefreshWindow();
         }
 
-        private bool _isHiding;
+
         private void MyNotifyIcon_TrayLeftMouseDown(object sender, RoutedEventArgs e)
         {
 
@@ -288,39 +394,6 @@ namespace Google_Translate
                 this.Show();
                 this.Topmost = true;
                 this.Topmost = false;
-            }
-
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            HotkeyManager.Current.Remove("Text");
-            myNotifyIcon.Dispose();
-        }
-
-        private void Translate()
-        {
-            if (String.IsNullOrEmpty(Input.Text))
-            {
-                return;
-            }
-
-            Result.Text = String.Empty;
-
-            string url = String.Format("http://www.google.com/translate_t?hl=en&ie=UTF8&text={0}&langpair={1}", Input.Text, 
-                String.Format("{0}|{1}", inputLang, resultLang));
-            WebClient webClient = new WebClient();
-            webClient.Encoding = System.Text.Encoding.UTF8;
-            webClient.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0");
-            webClient.Headers.Add(HttpRequestHeader.AcceptCharset, "UTF-8");
-            string result = webClient.DownloadString(url);
-
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(result);
-
-            foreach (HtmlNode span in doc.DocumentNode.SelectNodes("//span[@title]"))
-            {
-                Result.Text += span.InnerText + " ";
             }
 
         }
@@ -334,44 +407,7 @@ namespace Google_Translate
         {
             this.Close();
         }
-
-        private void BtnPin_Click(object sender, RoutedEventArgs e)
-        {
-            this.Topmost = !this.Topmost;
-            if (this.Topmost)
-            {
-                BtnPin.Background = clicked;
-                PinBorder.Background = clicked;
-            }
-            else
-            {
-
-                BtnPin.Background = notClicked;
-                PinBorder.Background = notClicked;
-            }
-        }
-
-        private void Input_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                Translate();
-            }
-        }
-
-        private void PlToEn_Click(object sender, RoutedEventArgs e)
-        {
-            inputLang = languages["Polish"];
-            resultLang = languages["English"];
-
-            PlToEn.Background = clicked;
-            PlToEnBorder.Background = clicked;
-
-            EnToPl.Background = notClicked;
-            EnToPlBorder.Background = notClicked;
-        }
-
-        private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void BtnHide_Click(object sender, RoutedEventArgs e)
         {
             if (!Topmost)
             {
@@ -379,16 +415,79 @@ namespace Google_Translate
             }
         }
 
-        private void EnToPl_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Pin/Unpin MainWindow and change BtnPin style
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtnPin_Click(object sender, RoutedEventArgs e)
         {
-            inputLang = languages["English"];
-            resultLang = languages["Polish"];
-
-            EnToPl.Background = clicked;
-            EnToPlBorder.Background = clicked;
-
-            PlToEn.Background = notClicked;
-            PlToEnBorder.Background = notClicked;
+            this.Topmost = !this.Topmost;
+            if (this.Topmost)
+            {
+                BtnPin.Style = (Style)this.Resources["BlueButton"];
+                PinBorder.Background = _clicked;
+            }
+            else
+            {
+                BtnPin.Style = (Style)this.Resources["GrayButton"];
+                PinBorder.Background = _notClicked;
+            }
         }
+
+        /// <summary>
+        /// Start translate when Enter was hit;
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Input_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                Translate();
+            }
+        }
+        /// <summary>
+        /// Assign language to input property when selection changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SetSource_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            _sourceLang = languages[SetSource.SelectedItem.ToString()];
+        }
+        /// <summary>
+        /// Assign language to result property when selection changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void GetResult_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            _resultLang = languages[GetResult.SelectedItem.ToString()];
+        }
+        /// <summary>
+        /// Opens Window with Shortcut settings
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenShortcut_Click(object sender, RoutedEventArgs e)
+        {
+            var shortShortcut = new ChangeShortcut();
+            shortShortcut.Show();
+        }
+        /// <summary>
+        /// Convert the way of translated language
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ConvertLang_Click(object sender, RoutedEventArgs e)
+        {
+            int indexForSource = SetSource.Items.IndexOf(GetResult.SelectedItem);
+            int indexForResult = GetResult.Items.IndexOf(SetSource.SelectedItem);
+            SetSource.SelectedIndex = indexForSource;
+            GetResult.SelectedIndex = indexForResult;
+        }
+
+        #endregion
     }
 }

@@ -1,9 +1,31 @@
 ﻿<Window x:Class="Google_Translate.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Google Translate" Height="130"  Width="500" Loaded="Window_Loaded" Closing="Window_Closing"
-        xmlns:local ="clr-namespace:Google_Translate" Topmost="True" WindowStyle="None" MouseDoubleClick="Window_MouseDoubleClick"
-        xmlns:tb="http://www.hardcodet.net/taskbar">
+        Title="Google Translate" Height="120"  Width="551" MaxHeight="800" Loaded="Window_Loaded" Closing="Window_Closing"
+        xmlns:local ="clr-namespace:Google_Translate" Topmost="False" WindowStyle="None"
+        xmlns:tb="http://www.hardcodet.net/taskbar" ResizeMode="NoResize">
+    <Window.Resources>
+        <Style x:Key="BlueButton" x:Name="BlueButton" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="#4B8DF8" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontFamily" Value="Segoe UI Symbol"/>
+        </Style>
+        <Style x:Key="GrayButton" x:Name="GrayButton" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="#E3E3E3" />
+            <Setter Property="Foreground" Value="Black" />
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontFamily" Value="Segoe UI Symbol"/>
+        </Style>
+        <Style x:Key="ComboTrigger" TargetType="ComboBoxItem">
+            <Style.Triggers>
+                <Trigger Property="IsSelected"
+                     Value="True">
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
 
     <Grid Margin="3">
         <Grid.ColumnDefinitions>
@@ -20,41 +42,50 @@
                     Visibility="Visible"
                     ToolTipText="Google Translate"
                     IconSource="icon.ico"
-                    MenuActivation="LeftOrRightClick"
-                    PopupActivation="DoubleClick"
-                        />
+                    MenuActivation="RightClick"
+                    PopupActivation="DoubleClick">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Ustaw skrót klawiszowy" Click="OpenShortcut_Click"/>
+                    <MenuItem Header="Zamknij" Click="BtnClose_Click"/>
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+
+
+        </tb:TaskbarIcon>
 
         <Label Content="Tłumacz" FontSize="20" FontFamily="Segoe UI Symbol" Foreground="#DD4B39"/>
 
-        <Border Name="PinBorder" BorderBrush="#C0C0C0" CornerRadius="5" BorderThickness="1" Grid.Column="1" Height="30" Width="70" HorizontalAlignment="Right" Margin="0,0,75,0">
-            <Button Name="BtnPin"  FontSize="15" FontFamily="Segoe UI Symbol" 
-                Background="#C0C0C0" Foreground="#666" Click="BtnPin_Click" Content="&#x1f4cc;" />
+        <Border Name="PinBorder" BorderBrush="#C0C0C0" CornerRadius="5" BorderThickness="1" Grid.Column="1" Height="30" Width="70" HorizontalAlignment="Right" 
+                Margin="0,0,75,0">
+            <Button Name="BtnPin" Style="{StaticResource GrayButton}" Click="BtnPin_Click" Content="&#x1f4cc;" />
         </Border>
         <Border BorderBrush="#4B8DF8" CornerRadius="5" BorderThickness="1" Grid.Column="1" Width="70" Height="30" HorizontalAlignment="Right">
-            <Button Name="BtnClose"  FontSize="12" Content="&#x274c;" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
-                    FontFamily="Segoe UI Symbol" Background="#4B8DF8" Foreground="White" Click="BtnClose_Click"/>
+            <Button Name="BtnHide" Style="{StaticResource BlueButton}" Content="&#x274c;" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                    Click="BtnHide_Click"/>
         </Border>
+        
+        <TextBox Name="Input"  Grid.Row="1" Margin="0,5,3,0" Background="Transparent" MaxHeight="710" TextWrapping="Wrap" FontSize="15" Width="Auto" Height="Auto" 
+                 FontFamily="Segoe UI Symbol" KeyDown="Input_KeyDown" Padding="5" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
 
-        <TextBox Name="Input"  Grid.Row="1" Margin="0,5,3,0" Background="Transparent" TextWrapping="Wrap" FontSize="15" Width="Auto" Height="Auto" 
-                 FontFamily="Segoe UI Symbol" KeyDown="Input_KeyDown" Padding="5"/>
-
-        <TextBlock Name="Result" Grid.Column="1" Grid.Row="1" Background="LightGray" Margin="3,5,0,0" FontFamily="Segoe UI Symbol" Width="Auto" Height="Auto"
-                   FontSize="15" TextWrapping="Wrap" Padding="5"/>
+        <TextBox Name="Result" Grid.Column="1" Grid.Row="1" Background="LightGray" MaxHeight="710" Margin="3,5,0,0" FontFamily="Segoe UI Symbol" Width="Auto" Height="Auto"
+                   FontSize="15" TextWrapping="Wrap" Padding="5" ScrollViewer.VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
 
         <Border BorderBrush="#4B8DF8" CornerRadius="5" BorderThickness="1" Grid.Column="1" Grid.Row="2" Margin="0,5,0,0" HorizontalAlignment="Right">
-            <Button Name="Send" Content="Tłumacz" Click="Send_Click" Background="#4B8DF8" Width="100" Foreground="White"
-                FontFamily="Segoe UI Symbol" />
+            <Button Name="Send" Content="Tłumacz" Click="Send_Click" Width="100" Style="{StaticResource BlueButton}" />
         </Border>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,5,0,0">
-            <Border BorderBrush="#C0C0C0" Name="EnToPlBorder" CornerRadius="5" BorderThickness="1" Grid.Column="0" Grid.Row="2" Margin="0,0,5,0" HorizontalAlignment="Left">
-                <Button Name="EnToPl" Content="EN &#x279b; PL" Background="#C0C0C0" Width="100" Foreground="#666" 
-                FontFamily="Segoe UI Symbol" Click="EnToPl_Click"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,5,0,0">
+
+            <ComboBox Name="SetSource" SelectionChanged="SetSource_SelectionChanged" Background="#E3E3E3" Margin="0,0,5,0" Width="130" FontFamily="Segoe UI Symbol"
+                      FontSize="15"/>
+            <Border BorderBrush="#E3E3E3" Name="PlToEnBorder" CornerRadius="5" BorderThickness="1" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" 
+                    Margin="0,0,5,0">
+                <Button Name="PlToEn" Content="&#x21c4;" Background="#E3E3E3" Width="70" Foreground="#666" FontFamily="Segoe UI Symbol" FontSize="30" 
+                        Padding="0,-10,0,0" Click="ConvertLang_Click" />
             </Border>
-            <Border BorderBrush="#E3E3E3" Name="PlToEnBorder" CornerRadius="5" BorderThickness="1" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left">
-                <Button Name="PlToEn" Content="PL &#x279b; EN" Background="#E3E3E3" Width="100" Foreground="#666"
-                FontFamily="Segoe UI Symbol" Click="PlToEn_Click" />
-            </Border>
+            <ComboBox Name="GetResult" Background="#E3E3E3" SelectionChanged="GetResult_SelectionChanged" Width="130" FontFamily="Segoe UI Symbol" FontSize="15"/>
+
         </StackPanel>
         
 
