@@ -46,6 +46,7 @@
                     PopupActivation="DoubleClick">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Header="Autostart"  IsCheckable="True" Name="AutostartOption" Checked="AutostartOption_Checked" Unchecked="AutostartOption_Unchecked"/>
                     <MenuItem Header="Ustaw skrót klawiszowy" Click="OpenShortcut_Click"/>
                     <MenuItem Header="Zamknij" Click="BtnClose_Click"/>
                 </ContextMenu>

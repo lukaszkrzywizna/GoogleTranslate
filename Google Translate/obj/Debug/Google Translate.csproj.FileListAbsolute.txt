@@ -22,3 +22,27 @@ D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\
 D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\ChangeShortcut.g.cs
 D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\ChangeShortcut.baml
 D:\Home\Dokumenty\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.csprojResolveAssemblyReference.cache
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Google Translate.exe.config
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.exe
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.pdb
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Google Translate.exe
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Google Translate.pdb
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Hardcodet.Wpf.TaskbarNotification.dll
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\HtmlAgilityPack.dll
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\NHotkey.dll
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\NHotkey.Wpf.dll
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Hardcodet.Wpf.TaskbarNotification.pdb
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\Hardcodet.Wpf.TaskbarNotification.xml
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\HtmlAgilityPack.pdb
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\bin\Debug\HtmlAgilityPack.xml
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\ChangeShortcut.g.cs
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\MainWindow.g.cs
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\App.g.cs
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate_MarkupCompile.cache
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate_MarkupCompile.lref
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\ChangeShortcut.baml
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\MainWindow.baml
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.g.resources
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google_Translate.Properties.Resources.resources
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.csproj.GenerateResource.Cache
+C:\Users\lukas\Desktop\Projekty Informatyczne\Visual Studio 2013\Projects\Google Translate\Google Translate\obj\Debug\Google Translate.csprojResolveAssemblyReference.cache

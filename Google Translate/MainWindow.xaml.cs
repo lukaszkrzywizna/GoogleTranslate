@@ -16,6 +16,7 @@ using HtmlAgilityPack;
 using System.Xml.Serialization;
 using System.Xml;
 using System.Configuration;
+using Microsoft.Win32;
 
 namespace Google_Translate
 {
@@ -39,6 +40,8 @@ namespace Google_Translate
         private string _resultLang;
 
         private List<bool> _successArray = new List<bool>();
+
+        private RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
         private Dictionary<string, string> languages = new Dictionary<string, string>()
         {
@@ -67,6 +70,8 @@ namespace Google_Translate
         {
             InitializeComponent();
             this.ShowInTaskbar = false;
+
+            AutostartOption.IsChecked = (rkApp.GetValue("GoogleTranslate") == null) ? false : true;
         }
 
         #region Translate and organise clipboard
@@ -202,7 +207,6 @@ namespace Google_Translate
         }
 
         #endregion
-
 
         #region Clipboard Helper Methods
 
@@ -475,6 +479,17 @@ namespace Google_Translate
             var shortShortcut = new ChangeShortcut();
             shortShortcut.Show();
         }
+
+        private void AutostartOption_Checked(object sender, RoutedEventArgs e)
+        {
+            rkApp.SetValue("GoogleTranslate", System.Reflection.Assembly.GetExecutingAssembly().Location.ToString());
+        }
+
+        private void AutostartOption_Unchecked(object sender, RoutedEventArgs e)
+        {
+            rkApp.DeleteValue("GoogleTranslate", false);
+        }
+
         /// <summary>
         /// Convert the way of translated language
         /// </summary>

@@ -8,6 +8,7 @@ using System.Windows;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace Google_Translate
 {
@@ -42,6 +43,7 @@ namespace Google_Translate
                     }
                 }
             }
+
         }
 
     }
